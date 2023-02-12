@@ -1,0 +1,1 @@
+Vào form1.cs để đọc code
