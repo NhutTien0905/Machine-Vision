@@ -11,11 +11,10 @@ def convolution(img,mask,mode):
     nImg = np.pad(img,padSize+1)
     lengthMask = len(mask)
     lengthImg = len(nImg)
-    rangee = lengthImg - lengthMask
     result = np.zeros((img.shape[0] + 2*padSize, img.shape[1] + 2*padSize))
-    for i in range(rangee):
-        for j in range(rangee):
-            pieceImg = nImg[i:i+lengthMask,j:j+lengthMask]
+    for i in range(1,lengthImg-1):
+        for j in range(1,lengthImg-1):
+            pieceImg = nImg[i-1:i+2,j-1:j+2]
             s = 0
             for k in range(lengthMask):
                 for t in range(lengthMask):
@@ -38,14 +37,14 @@ def calRateOfChange(rgbX, rgbY):
     gxx = np.sum(rgbX**2, axis=2)
     gyy = np.sum(rgbY**2, axis=2)
     gxy = np.sum(rgbX*rgbY, axis=2)
-    theta = 0.5*np.arctan(2*(gxy/(gxx-gyy)))
-    F = np.sqrt(0.5*((gxx+gyy) + (gxx-gyy)*np.cos(2*theta)+2*(gxy*np.sin(2*theta))))
-    F = np.nan_to_num(F,nan = 255)
+    theta = 0.5*np.arctan2(2*gxy,(gxx-gyy))
+    F = np.sqrt(0.5*((gxx+gyy) + (gxx-gyy)*np.cos(2*theta)+2*gxy*np.sin(2*theta)))
     return F.astype(np.uint8)
 
 def empty(a):
     threshold=a
-    binary=np.where(calRateOfChange(rgbX,rgbY)>threshold,255,0)
+    binary = calRateOfChange(rgbX,rgbY)
+    binary=np.where(binary>=threshold,255,0)
     cv2.imshow("Sobel",binary.astype(np.uint8))
 
 img = cv2.imread("image/lena.png")
@@ -60,7 +59,7 @@ maskY = np.array([[-1,0,1],
 cv2.namedWindow("org")
 cv2.createTrackbar("Threshold", "org" , 0, 255, empty)
 
-rgbX = findEdge(img,maskX)
-rgbY = findEdge(img,maskY)
+rgbX = findEdge(img,maskX).astype(np.float64)
+rgbY = findEdge(img,maskY).astype(np.float64)
 cv2.imshow("org",img)
 cv2.waitKey()
